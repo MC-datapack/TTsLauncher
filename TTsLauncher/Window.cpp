@@ -26,10 +26,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_FLAT, 5, 10, 135, 30, hwnd, (HMENU)1, NULL, NULL);
         SendMessage(hButton1, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-        //HWND hButton2 = CreateWindow(L"BUTTON", properties["language"] == "English" ? L"Toggle Console" : L"Konsole umschalten",
-        //    WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_FLAT, 10, 100, 135, 30, hwnd, (HMENU)2, NULL, NULL);
-        //SendMessage(hButton2, WM_SETFONT, (WPARAM)hFont, TRUE);
-
         HWND hButton3 = CreateWindow(L"BUTTON", properties["language"] == "English" ? L"Switch Language" : L"Sprache umschalten",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_FLAT, 5, 60, 135, 30, hwnd, (HMENU)3, NULL, NULL);
         SendMessage(hButton3, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -45,11 +41,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 runJar(jarPath);
             }
         }
-        //else if (LOWORD(wParam) == 2) {
-        //    properties["console"] = (properties["console"] == "true") ? "false" : "true";
-        //    writeProperties(propertiesPath, properties);
-        //    toggleConsole(properties["console"] == "true");
-        //}
         else if (LOWORD(wParam) == 3) {
             properties["language"] = (properties["language"] == "English") ? "German" : "English";
             writeProperties(propertiesPath, properties);
