@@ -69,5 +69,8 @@
     <Image Include="TTsLauncher.ico">
       <Filter>Ressourcendateien</Filter>
     </Image>
+    <Image Include="..\..\TTsGames.bmp">
+      <Filter>Ressourcendateien</Filter>
+    </Image>
   </ItemGroup>
 </Project>

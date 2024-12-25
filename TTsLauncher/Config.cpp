@@ -4,7 +4,7 @@
 #include <iostream>
 #include "Utility.h"
 
-// Default properties function
+// Default properties
 std::map<std::string, std::string> getDefaultProperties() {
     std::map<std::string, std::string> defaultProperties;
     defaultProperties["language"] = "English";

@@ -22,18 +22,18 @@ void runJar(const std::string& jarPath) {
 std::string downloadJarFromJSON(const std::wstring& configURL) {
     std::string url = toNarrowString(configURL);
 
-    std::string configFile = "launcher_info.json";
-    if (!downloadFile(url, configFile)) {
-        std::cerr << "Failed to download the configuration file from " << url << std::endl;
+    std::string jsonFile = "launcher_info.json";
+    if (!downloadFile(url, jsonFile)) {
+        std::cerr << "Failed to download the JSON file from " << url << std::endl;
         return "";
     }
 
-    std::ifstream file(configFile);
+    std::ifstream file(jsonFile);
     json config;
     file >> config;
 
     std::string jarUrl = config["jar-file"];
-    std::string jarPath = "downloaded.jar";
+    std::string jarPath = "TTsGames.jar";
 
     if (downloadFile(jarUrl, jarPath)) {
         return jarPath;
@@ -60,7 +60,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         CLASS_NAME,                     // Window class
         CLASS_NAME,                  // Window text
         WS_OVERLAPPEDWINDOW,            // Window style
-        CW_USEDEFAULT, CW_USEDEFAULT, 160, 145,
+        CW_USEDEFAULT, CW_USEDEFAULT, 260, 240,
         NULL,       // Parent window    
         NULL,       // Menu
         hInstance,  // Instance handle

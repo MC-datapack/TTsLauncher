@@ -151,6 +151,7 @@
     <ResourceCompile Include="TTsLauncher.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\..\TTsGames.bmp" />
     <Image Include="small.ico" />
     <Image Include="TTsLauncher.ico" />
   </ItemGroup>
