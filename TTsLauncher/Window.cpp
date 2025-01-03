@@ -66,7 +66,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     }
     case WM_COMMAND: {
         if (LOWORD(wParam) == 1) {
-            std::string jarPath = downloadJarFromJSON(JSON_URL);
+            MessageBox(hwnd, properties["language"] == "English" ? L"Downloading Jar file" : L"Jar Datei wird heruntergeladen", L"Jar", MB_OK);
+            std::string jarPath = downloadJarFromJSON(JSON_URL, hwnd);
             if (!jarPath.empty()) {
                 runJar(jarPath);
             }

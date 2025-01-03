@@ -8,6 +8,7 @@
 #include "Network.h"
 #include "Utility.h"
 #include "Window.h"
+//#include "Resource.h"
 
 using json = nlohmann::json;
 
@@ -15,11 +16,22 @@ bool isJavaInstalled() {
     return system("java -version") == 0;
 }
 
+#ifdef _WIN32
 void runJar(const std::string& jarPath) {
-    system(("java -jar " + jarPath).c_str());
-}
+    std::wstring wJarPath(jarPath.begin(), jarPath.end());
+    std::wstring command = L"javaw";
+    std::wstring arguments = L"-jar " + wJarPath;
 
-std::string downloadJarFromJSON(const std::wstring& configURL) {
+    ShellExecute(NULL, L"open", command.c_str(), arguments.c_str(), NULL, SW_HIDE);
+}
+#else
+void runJar(const std::string& jarPath) {
+    std::string command = "java -jar " + jarPath + " > /dev/null 2>&1 &";
+    system(command.c_str());
+}
+#endif
+
+std::string downloadJarFromJSON(const std::wstring& configURL, HWND hwnd) {
     std::string url = toNarrowString(configURL);
 
     std::string jsonFile = "launcher_info.json";
@@ -29,8 +41,21 @@ std::string downloadJarFromJSON(const std::wstring& configURL) {
     }
 
     std::ifstream file(jsonFile);
+    if (!file) {
+        std::cerr << "Failed to open the JSON file" << std::endl;
+        return "";
+    }
+
     json config;
-    file >> config;
+    try {
+        file >> config;
+    }
+    catch (const json::parse_error& e) {
+        std::cerr << "Failed to parse the JSON file: " << e.what() << std::endl;
+        return "";
+    }
+
+    //javaUrl = toNarrowString(config["jdk-download"]);
 
     std::string jarUrl = config["jar-file"];
     std::string jarPath = "TTsGames.jar";

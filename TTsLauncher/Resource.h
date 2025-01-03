@@ -18,6 +18,9 @@
 #endif
 
 #define IDB_TTSGAMES            110
+#define IDD_JAVA_DIALOG			101
+#define ID_DOWNLOAD_JAVA		102
+
 
 // Nächste Standardwerte für neue Objekte
 //
