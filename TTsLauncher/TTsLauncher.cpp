@@ -18,15 +18,27 @@ bool isJavaInstalled() {
 
 #ifdef _WIN32
 void runJar(const std::string& jarPath) {
-    std::wstring wJarPath(jarPath.begin(), jarPath.end());
-    std::wstring command = L"javaw";
-    std::wstring arguments = L"-jar " + wJarPath;
+    std::map<std::string, std::string> properties = readProperties(getAppDataPath() + L"\\launcher.properties");
+    if (properties["console"] == "true") {
+        system(("java -jar " + jarPath).c_str());
+    }
+    else {
+        std::wstring wJarPath(jarPath.begin(), jarPath.end());
+        std::wstring command = L"javaw";
+        std::wstring arguments = L"-jar " + wJarPath;
 
-    ShellExecute(NULL, L"open", command.c_str(), arguments.c_str(), NULL, SW_HIDE);
+        ShellExecute(NULL, L"open", command.c_str(), arguments.c_str(), NULL, SW_HIDE);
+    }
 }
 #else
 void runJar(const std::string& jarPath) {
-    std::string command = "java -jar " + jarPath + " > /dev/null 2>&1 &";
+    std::string command;
+    if (properties["console"] == "true") {
+        command = "java -jar " + jarPath + " > /dev/null 2>&1 &";
+    }
+    else {
+        command = "java -jar " + jarPath;
+    }
     system(command.c_str());
 }
 #endif

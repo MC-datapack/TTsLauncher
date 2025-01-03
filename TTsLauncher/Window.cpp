@@ -4,12 +4,15 @@
 #include "Config.h"
 #include "Utility.h"
 #include "TTsLauncher.h"
-#include "Resource.h"  // Include the Resource.h file
+#include "Resource.h"
+
+#pragma comment(lib, "Msimg32.lib")
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     static std::map<std::string, std::string> properties;
     static std::wstring propertiesPath;
     static HBITMAP hBitmap = NULL;
+    static HWND hButton1, hButton2, hButton3;
 
     switch (uMsg) {
     case WM_CREATE: {
@@ -28,17 +31,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS,
             CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Segoe UI"));
 
-        HWND hButton1 = CreateWindow(L"BUTTON", properties["language"] == "English" ? L"Run newest TTsGames version" : L"Neuste TTsGames Version starten",
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_FLAT, 5, 10, 200, 30, hwnd, (HMENU)1, NULL, NULL);
+        hButton1 = CreateWindow(L"BUTTON", properties["language"] == "English" ? L"Run newest TTsGames version" : L"Neuste TTsGames Version starten",
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 5, 10, 230, 30, hwnd, (HMENU)1, NULL, NULL);
         SendMessage(hButton1, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-        HWND hButton3 = CreateWindow(L"BUTTON", properties["language"] == "English" ? L"Switch Language" : L"Sprache umschalten",
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_FLAT, 5, 60, 200, 30, hwnd, (HMENU)3, NULL, NULL);
+        hButton2 = CreateWindow(L"BUTTON", properties["language"] == "English" ? L"Toggle Logs" : L"Logs umschalten",
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 5, 125, 230, 30, hwnd, (HMENU)2, NULL, NULL);
+        SendMessage(hButton2, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+        hButton3 = CreateWindow(L"BUTTON", properties["language"] == "English" ? L"Switch Language" : L"Sprache umschalten",
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 5, 85, 230, 30, hwnd, (HMENU)3, NULL, NULL);
         SendMessage(hButton3, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-        // Apply console toggle based on properties
-        toggleConsole(properties["console"] == "true");
-        break;
         break;
     }
     case WM_PAINT: {
@@ -64,6 +68,46 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         EndPaint(hwnd, &ps);
         break;
     }
+    case WM_DRAWITEM: {
+        LPDRAWITEMSTRUCT pDIS = (LPDRAWITEMSTRUCT)lParam;
+        HDC hdc = pDIS->hDC;
+        RECT rc = pDIS->rcItem;
+
+        HBRUSH hBrush = CreateSolidBrush(RGB(50, 50, 50)); // Dark background color
+        FillRect(hdc, &rc, hBrush);
+
+        // Draw 3D effect
+        HPEN hPenLight = CreatePen(PS_SOLID, 2, RGB(150, 150, 150)); // Light shadow
+        HPEN hPenDark = CreatePen(PS_SOLID, 2, RGB(100, 100, 100)); // Dark shadow
+
+        SelectObject(hdc, hPenLight);
+        MoveToEx(hdc, rc.left, rc.bottom - 1, NULL);
+        LineTo(hdc, rc.left, rc.top);
+        LineTo(hdc, rc.right - 1, rc.top);
+
+        SelectObject(hdc, hPenDark);
+        MoveToEx(hdc, rc.left, rc.bottom - 1, NULL);
+        LineTo(hdc, rc.right - 1, rc.bottom - 1);
+        LineTo(hdc, rc.right - 1, rc.top);
+
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, RGB(255, 255, 255)); // Set text color to black
+
+        // Draw button text
+        DrawText(hdc, pDIS->hwndItem == hButton1 ? (properties["language"] == "English" ? L"Run newest TTsGames version" : L"Neuste TTsGames Version starten") :
+            pDIS->hwndItem == hButton2 ? (properties["language"] == "English" ? L"Toggle Logs" : L"Logs umschalten") :
+            (properties["language"] == "English" ? L"Switch Language" : L"Sprache umschalten"), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+        if (pDIS->itemState & ODS_FOCUS) {
+            DrawFocusRect(hdc, &rc);
+        }
+
+        DeleteObject(hBrush);
+        DeleteObject(hPenLight);
+        DeleteObject(hPenDark);
+
+        break;
+    }
     case WM_COMMAND: {
         if (LOWORD(wParam) == 1) {
             MessageBox(hwnd, properties["language"] == "English" ? L"Downloading Jar file" : L"Jar Datei wird heruntergeladen", L"Jar", MB_OK);
@@ -71,6 +115,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (!jarPath.empty()) {
                 runJar(jarPath);
             }
+        }
+        else if (LOWORD(wParam) == 2) {
+            properties["console"] = properties["console"] == "false" ? "true" : "false";
+            writeProperties(propertiesPath, properties);
+            MessageBox(hwnd, (properties["language"] == "English" ? (L"Display logs was set to: " + std::wstring(properties["console"].begin(), properties["console"].end())) : (L"Logs anzeigen wurde auf: \"" + std::wstring(properties["console"].begin(), properties["console"].end()) + L"\" gesetzt")).c_str(), L"Information", MB_OK);
         }
         else if (LOWORD(wParam) == 3) {
             properties["language"] = (properties["language"] == "English") ? "Deutsch" : "English";
