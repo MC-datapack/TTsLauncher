@@ -39,6 +39,9 @@
     <ClInclude Include="Window.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="ProgressInfo.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TTsLauncher.cpp">
@@ -63,9 +66,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="small.ico">
-      <Filter>Ressourcendateien</Filter>
-    </Image>
     <Image Include="TTsLauncher.ico">
       <Filter>Ressourcendateien</Filter>
     </Image>

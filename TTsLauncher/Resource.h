@@ -18,6 +18,7 @@
 #endif
 
 #define IDB_TTSGAMES            110
+#define IDB_TTSGAMESDARK        111
 #define IDD_JAVA_DIALOG			101
 #define ID_DOWNLOAD_JAVA		102
 

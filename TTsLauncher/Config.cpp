@@ -9,6 +9,7 @@ std::map<std::string, std::string> getDefaultProperties() {
     std::map<std::string, std::string> defaultProperties;
     defaultProperties["language"] = "English";
     defaultProperties["console"] = "false";
+    defaultProperties["darkMode"] = "false";
     return defaultProperties;
 }
 

@@ -78,7 +78,7 @@ std::string downloadJarFromJSON(const std::wstring& configURL, HWND hwnd) {
     return "";
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     std::map<std::string, std::string> properties;
     std::wstring propertiesPath = getAppDataPath() + L"\\launcher.properties";
     properties = readProperties(propertiesPath);
@@ -92,23 +92,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     RegisterClass(&wc);
 
+    // Get screen dimensions
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
     HWND hwnd = CreateWindowEx(
-        0,                              // Optional window styles.
+        0,                              // Optional window styles
         CLASS_NAME,                     // Window class
-        CLASS_NAME,                  // Window text
+        CLASS_NAME,                     // Window text
         WS_OVERLAPPEDWINDOW,            // Window style
-        CW_USEDEFAULT, CW_USEDEFAULT, 260, 240,
-        NULL,       // Parent window    
+        0, 0, screenWidth, screenHeight,
+        NULL,       // Parent window
         NULL,       // Menu
         hInstance,  // Instance handle
         NULL        // Additional application data
     );
 
     if (hwnd == NULL) {
-        return 0;
+        return 1;
     }
 
-    ShowWindow(hwnd, nCmdShow);
+    // Make the window fullscreen
+    ShowWindow(hwnd, SW_MAXIMIZE);
+    SetWindowPos(hwnd, HWND_TOP, 0, 0, screenWidth, screenHeight, SWP_NOZORDER | SWP_FRAMECHANGED);
 
     MSG msg = {};
     while (GetMessage(&msg, NULL, 0, 0)) {
