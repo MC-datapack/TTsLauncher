@@ -6,15 +6,34 @@
 #include "Utility.h"
 #include "TTsLauncher.h"
 #include "Resource.h"
+#include "Network.h"
+#include <fstream>
+
+#include <nlohmann/json.hpp>
 
 #pragma comment(lib, "Msimg32.lib")
 #pragma comment(lib, "comctl32.lib")
+
+void populateComboBox(HWND hComboBox, const nlohmann::json& config) {
+    // Add "Latest Release" and "Latest Pre-Release" first
+    SendMessage(hComboBox, CB_ADDSTRING, 0, (LPARAM)L"Latest Release");
+    SendMessage(hComboBox, CB_ADDSTRING, 0, (LPARAM)L"Latest Pre-Release");
+
+    // Add versions in the order they appear in the JSON file
+    for (const auto& versionItem : config["versions"].items()) {
+        std::wstring versionWstr = std::wstring(versionItem.key().begin(), versionItem.key().end());
+        SendMessage(hComboBox, CB_ADDSTRING, 0, (LPARAM)versionWstr.c_str());
+    }
+
+    // Set default selection to "Latest Release"
+    SendMessage(hComboBox, CB_SETCURSEL, 0, 0);
+}
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     static std::map<std::string, std::string> properties;
     static std::wstring propertiesPath;
     static HBITMAP hBitmap = NULL;
-    static HWND hButton1, hButton2, hButton3, hButton4, hProgressBar;
+    static HWND hButton1, hButton2, hButton3, hButton4, hProgressBar, hComboBox;
 
     switch (uMsg) {
     case WM_CREATE: {
@@ -59,7 +78,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         int button4Y = centerY + 2 * (buttonHeight + buttonSpacing);
 
         // Create buttons at the new positions
-        hButton1 = CreateWindow(L"BUTTON", properties["language"] == "English" ? L"Run newest TTsGames version" : L"Neuste TTsGames Version starten",
+        hButton1 = CreateWindow(L"BUTTON", properties["language"] == "English" ? L"Run TTsGames version" : L"TTsGames Version starten",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, button1X, button1Y, buttonWidth, buttonHeight, hwnd, (HMENU)1, NULL, NULL);
         SendMessage(hButton1, WM_SETFONT, (WPARAM)hFont, TRUE);
 
@@ -74,6 +93,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         hButton4 = CreateWindow(L"BUTTON", properties["language"] == "English" ? L"Dark/Light Mode" : L"Dunkel/Hell",
             WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, button4X, button4Y, buttonWidth, buttonHeight, hwnd, (HMENU)4, NULL, NULL);
         SendMessage(hButton4, WM_SETFONT, (WPARAM)hFont, TRUE);
+        // Added to WM_CREATE case
+        hComboBox = CreateWindow(WC_COMBOBOX, TEXT(""),
+            CBS_DROPDOWN | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
+            450, button1Y, 350, 200, hwnd, (HMENU)5, NULL, NULL);
+        SendMessage(hComboBox, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+        std::string jsonFile = "launcher_info.json";
+        if (!downloadFile(toNarrowString(JSON_URL), jsonFile)) {
+            MessageBox(hwnd, L"Failed to download the JSON file", L"Error", MB_OK);
+        }
+        std::ifstream file(jsonFile);
+        if (!file) {
+            MessageBox(hwnd, L"Failed to open the JSON file", L"Error", MB_OK);
+        }
+        nlohmann::json config;
+        try {
+            file >> config;
+            populateComboBox(hComboBox, config);
+        }
+        catch (const nlohmann::json::parse_error& e) {
+            MessageBox(hwnd, L"Failed to parse the JSON file", L"Error", MB_OK);
+        }
+
 
         // Create the progress bar
         hProgressBar = CreateWindowEx(0, PROGRESS_CLASS, NULL, WS_CHILD | WS_VISIBLE,
@@ -146,7 +188,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         SetTextColor(hdc, RGB(255, 255, 255)); // Set text color to black
 
         // Draw button text
-        DrawText(hdc, pDIS->hwndItem == hButton1 ? (properties["language"] == "English" ? L"Run newest TTsGames version" : L"Neuste TTsGames Version starten") :
+        DrawText(hdc, pDIS->hwndItem == hButton1 ? (properties["language"] == "English" ? L"Run TTsGames version" : L"TTsGames Version starten") :
             pDIS->hwndItem == hButton2 ? (properties["language"] == "English" ? L"Toggle Logs" : L"Logs umschalten") :
             pDIS->hwndItem == hButton3 ? (properties["language"] == "English" ? L"Switch Language" : L"Sprache umschalten") :
             (properties["language"] == "English" ? L"Dark/Light Mode" : L"Dunkel/Hell"), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -162,17 +204,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     }
     case WM_COMMAND: {
         if (LOWORD(wParam) == 1) {
-            MessageBox(hwnd, properties["language"] == "English" ? L"Downloading Jar file" : L"Jar Datei wird heruntergeladen", L"Jar", MB_OK);
-            std::string jarPath = downloadJarFromJSON(JSON_URL, hwnd);
+            int selectedIndex = SendMessage(hComboBox, CB_GETCURSEL, 0, 0);
+            if (selectedIndex != CB_ERR) {
+                wchar_t selectedText[256];
+                SendMessage(hComboBox, CB_GETLBTEXT, selectedIndex, (LPARAM)selectedText);
+                std::wstring selectedOption = selectedText;
 
-            // Simulate download progress for demonstration
-            for (int i = 0; i <= 100; i++) {
-                SendMessage(hProgressBar, PBM_SETPOS, i, 0);
-                Sleep(50); // Simulate time delay
-            }
+                std::string version = toNarrowString(selectedOption);
 
-            if (!jarPath.empty()) {
-                runJar(jarPath);
+                std::string jarPath;
+                if (version.find("Release") != std::string::npos) {
+                    jarPath = downloadJarFromJSON(JSON_URL, hwnd, true, false, "");
+                }
+                else if (version.find("Pre-Release") != std::string::npos) {
+                    jarPath = downloadJarFromJSON(JSON_URL, hwnd, false, true, "");
+                }
+                else {
+                    jarPath = downloadJarFromJSON(JSON_URL, hwnd, false, false, version);
+                }
+
+                // Simulate download progress
+                for (int i = 0; i <= 100; i++) {
+                    SendMessage(hProgressBar, PBM_SETPOS, i, 0);
+                    Sleep(10); // Simulate time delay
+                }
+
+                if (!jarPath.empty())
+                    runJar(jarPath);
             }
         }
         else if (LOWORD(wParam) == 2) {
@@ -188,7 +246,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         else if (LOWORD(wParam) == 4) {
             properties["darkMode"] = (properties["darkMode"] == "true") ? "false" : "true";
             writeProperties(propertiesPath, properties);
-            MessageBox(hwnd, properties["language"] == "English" ? L"Dark Mode was changed \nRestart to see it." : L"Dunkler Modus wirde geändert \nNeustarten um es zu sehen.", L"Dark Mode", MB_OK);
+            MessageBox(hwnd, properties["language"] == "English" ? L"Dark Mode was changed \nRestart to see it." : L"Dunkel Modus wurde geändert \nNeustarten um es zu sehen.", L"Dark Mode", MB_OK);
         }
         break;
     }

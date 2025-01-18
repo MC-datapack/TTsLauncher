@@ -1,4 +1,15 @@
 {
+  "latest": {
+    "release": "https://github.com/MC-datapack/TTsGames/releases/download/2.1/TTsGames-2.0-2.1.jar",
+    "pre-release": "https://github.com/MC-datapack/TTsGames/releases/download/2.1/TTsGames-2.0-2.1.jar"
+  },
+  "versions": {
+    "2.1": "https://github.com/MC-datapack/TTsGames/releases/download/2.1/TTsGames-2.0-2.1.jar",
+    "2.0": "https://github.com/MC-datapack/TTsGames/releases/download/2.0/TTsGames-2.0.jar",
+    "2.0-rc3": "https://github.com/MC-datapack/TTsGames/releases/download/2.0-rc3/TTsGames-2.0-2.0.jar",
+    "2.0-rc2": "https://github.com/MC-datapack/TTsGames/releases/download/2.0-rc2/TTsGames-2.0-2.0.jar",
+    "2.0-rc1": "https://github.com/MC-datapack/TTsGames/releases/download/2.0-rc1/TTsGames-2.0-2.0.jar"
+  },
   "jar-file": "https://github.com/MC-datapack/TTsGames/releases/download/2.1/TTsGames-2.0-2.1.jar",
   "jdk-download": "https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
 }

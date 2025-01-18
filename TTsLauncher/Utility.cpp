@@ -1,15 +1,12 @@
-#include <string>
 #include <windows.h>
 #include <shlobj.h>
+#include <string>
 
-// Convert wide string to narrow string
+// Function to convert wide string to narrow string
 std::string toNarrowString(const std::wstring& wideString) {
-    int bufferSize = WideCharToMultiByte(CP_UTF8, 0, wideString.c_str(), -1, NULL, 0, NULL, NULL);
-    if (bufferSize == 0) {
-        return "";
-    }
+    int bufferSize = WideCharToMultiByte(CP_UTF8, 0, wideString.c_str(), -1, nullptr, 0, nullptr, nullptr);
     std::string narrowString(bufferSize, 0);
-    WideCharToMultiByte(CP_UTF8, 0, wideString.c_str(), -1, &narrowString[0], bufferSize, NULL, NULL);
+    WideCharToMultiByte(CP_UTF8, 0, wideString.c_str(), -1, &narrowString[0], bufferSize, nullptr, nullptr);
     return narrowString;
 }
 
